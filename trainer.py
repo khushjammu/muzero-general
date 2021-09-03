@@ -261,7 +261,7 @@ class Trainer:
         self.optimizer.step()
         self.training_step += 1
 
-        # breakpoint() # breakpoint so i can inspect what's going on
+        breakpoint() # breakpoint so i can inspect what's going on
 
         return (
             priorities,
