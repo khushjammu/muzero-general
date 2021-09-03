@@ -177,6 +177,12 @@ class Trainer:
             predictions.append((value, reward, policy_logits))
         # predictions: num_unroll_steps+1, 3, batch, 2*support_size+1 | 2*support_size+1 | 9 (according to the 2nd dim)
 
+        losses = {
+            "value_loss": [],
+            "reward_loss": [],
+            "policy_loss": []
+        }
+
         ## Compute losses
         value_loss, reward_loss, policy_loss = (0, 0, 0)
         value, reward, policy_logits = predictions[0]
@@ -191,6 +197,11 @@ class Trainer:
         )
         value_loss += current_value_loss
         policy_loss += current_policy_loss
+
+        losses["value_loss"].append(current_value_loss)
+        losses["policy_loss"].append(current_policy_loss)
+        losses["reward_loss"].append(None)
+
         # Compute priorities for the prioritized replay (See paper appendix Training)
         pred_value_scalar = (
             models.support_to_scalar(value, self.config.support_size)
@@ -230,6 +241,10 @@ class Trainer:
                 lambda grad: grad / gradient_scale_batch[:, i]
             )
 
+            losses["value_loss"].append(current_value_loss)
+            losses["policy_loss"].append(current_policy_loss)
+            losses["reward_loss"].append(current_reward_loss)
+
             value_loss += current_value_loss
             reward_loss += current_reward_loss
             policy_loss += current_policy_loss
@@ -261,7 +276,21 @@ class Trainer:
         self.optimizer.step()
         self.training_step += 1
 
-        breakpoint() # breakpoint so i can inspect what's going on
+
+        data_to_dump = {
+            "predictions": predictions,
+            "target_value": target_value,
+            "target_reward": target_reward,
+            "target_policy": target_policy,
+            "losses": losses
+        }
+
+        with open("data_to_dump", "wb") as f:
+            pickle.dump(data_to_dump, f)
+
+        import sys; sys.exit(-1)
+
+        # breakpoint() # breakpoint so i can inspect what's going on
 
         return (
             priorities,
