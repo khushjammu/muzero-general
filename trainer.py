@@ -173,7 +173,7 @@ class Trainer:
                 hidden_state, action_batch[:, i]
             )
             # Scale the gradient at the start of the dynamics function (See paper appendix Training)
-            hidden_state.register_hook(lambda grad: grad * 0.5)
+            # hidden_state.register_hook(lambda grad: grad * 0.5)
             predictions.append((value, reward, policy_logits))
         # predictions: num_unroll_steps+1, 3, batch, 2*support_size+1 | 2*support_size+1 | 9 (according to the 2nd dim)
 
@@ -231,15 +231,15 @@ class Trainer:
             )
 
             # Scale gradient by the number of unroll steps (See paper appendix Training)
-            current_value_loss.register_hook(
-                lambda grad: grad / gradient_scale_batch[:, i]
-            )
-            current_reward_loss.register_hook(
-                lambda grad: grad / gradient_scale_batch[:, i]
-            )
-            current_policy_loss.register_hook(
-                lambda grad: grad / gradient_scale_batch[:, i]
-            )
+            # current_value_loss.register_hook(
+            #     lambda grad: grad / gradient_scale_batch[:, i]
+            # )
+            # current_reward_loss.register_hook(
+            #     lambda grad: grad / gradient_scale_batch[:, i]
+            # )
+            # current_policy_loss.register_hook(
+            #     lambda grad: grad / gradient_scale_batch[:, i]
+            # )
 
             losses["value_loss"].append(current_value_loss)
             losses["policy_loss"].append(current_policy_loss)
@@ -263,7 +263,7 @@ class Trainer:
             )
 
         # Scale the value loss, paper recommends by 0.25 (See paper appendix Reanalyze)
-        loss = value_loss * self.config.value_loss_weight + reward_loss + policy_loss
+        loss = value_loss + reward_loss + policy_loss
         if self.config.PER:
             # Correct PER bias by using importance-sampling (IS) weights
             loss *= weight_batch
@@ -289,7 +289,7 @@ class Trainer:
             import pickle
             pickle.dump(data_to_dump, f)
 
-        import sys; sys.exit(-1)
+        # import sys; sys.exit(-1)
 
         # breakpoint() # breakpoint so i can inspect what's going on
 
