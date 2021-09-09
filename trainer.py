@@ -167,6 +167,8 @@ class Trainer:
 
         to_insert = ReStonks(*batch)
 
+        to_insert = jax.tree_util.tree_map(lambda x: np.asarray(x), to_insert)
+
         import ray; breakpoint()
 
         self._client.insert(to_insert, priorities={'priority_table': 1.0})
