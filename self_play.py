@@ -33,19 +33,6 @@ class SelfPlay:
         numpy.random.seed(seed)
         torch.manual_seed(seed)
 
-        # frankenstein
-        K = 6  # number of unroll steps + initial inference
-        N_TD_STEPS = 20  # HOW MANY STEPS TO BOOTSTRAP INTO THE FUTURE
-        SEQUENCE_LENGTH = K + N_TD_STEPS
-        PERIOD = 1  # PERIOD FOR SEQUENCE ADDER
-
-        self._adder = adders.SequenceAdder(
-          client=reverb.Client("localhost:9000"),
-          sequence_length=SEQUENCE_LENGTH,
-          period=PERIOD, # sequences are exactly non-overlapping
-          end_of_episode_behavior=adders.EndBehavior.ABSORBING
-        )
-
         # Initialize the network
         self.model = models.MuZeroNetwork(self.config)
         self.model.set_weights(initial_checkpoint["weights"])

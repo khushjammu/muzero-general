@@ -1,3 +1,25 @@
+# frankensteining the two systems
+
+import reverb
+import dm_env
+from acme.adders import reverb as adders
+import jax
+from replay_buffer import ReplayBuffer
+
+from typing import Callable, Iterable, Mapping, NamedTuple, Optional, Union, Tuple
+
+class Step(NamedTuple):
+    """Step class used internally for reverb adders."""
+    observation: types.NestedArray
+    action: types.NestedArray
+    reward: types.NestedArray
+    discount: types.NestedArray
+    start_of_episode: StartOfEpisodeType
+    extras: types.NestedArray = ()
+
+
+#####
+
 import copy
 import time
 
@@ -21,6 +43,14 @@ class Trainer:
         # Fix random generator seed
         numpy.random.seed(self.config.seed)
         torch.manual_seed(self.config.seed)
+
+        # frankenstein
+        K = 6  # number of unroll steps + initial inference
+        N_TD_STEPS = 20  # HOW MANY STEPS TO BOOTSTRAP INTO THE FUTURE
+        SEQUENCE_LENGTH = K + N_TD_STEPS
+        PERIOD = 1  # PERIOD FOR SEQUENCE ADDER
+
+        self._client = reverb.client("localhost:9000")
 
         # Initialize the network
         self.model = models.MuZeroNetwork(self.config)
@@ -135,6 +165,25 @@ class Trainer:
             weight_batch,
             gradient_scale_batch,
         ) = batch
+
+        self._client.insert(batch)
+
+        # for i in range(observation_batch.shape[0]):
+        #     step_to_insert = (
+        #         observation_batch[i],
+        #         action_batch[i],
+        #         target_value[i],
+        #         target_reward[i],
+        #         target_policy[i],
+        #     )
+        #     self._client.insert(step_to_insert)
+
+        # observation: types.NestedArray
+        # action: types.NestedArray
+        # reward: types.NestedArray
+        # discount: types.NestedArray
+        # start_of_episode: StartOfEpisodeType
+        # extras: types.NestedArray = ()        
 
         # Keep values as scalars for calculating the priorities for the prioritized replay
         target_value_scalar = numpy.array(target_value, dtype="float32")
