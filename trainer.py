@@ -4,6 +4,7 @@ import reverb
 import dm_env
 from acme.adders import reverb as adders
 import jax
+import numpy as np
 from replay_buffer import ReplayBuffer
 
 from typing import Callable, Iterable, Mapping, NamedTuple, Optional, Union, Tuple
