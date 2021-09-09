@@ -40,7 +40,7 @@ class Trainer:
         SEQUENCE_LENGTH = K + N_TD_STEPS
         PERIOD = 1  # PERIOD FOR SEQUENCE ADDER
 
-        self._client = reverb.client("localhost:9000")
+        self._client = reverb.Client("localhost:9000")
 
         # Initialize the network
         self.model = models.MuZeroNetwork(self.config)
