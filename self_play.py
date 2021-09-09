@@ -130,13 +130,13 @@ class SelfPlay:
         game_history.observation_history.append(observation)
         game_history.reward_history.append(0)
 
-        # frankenstein first step
-        next_timestep = dm_env.TimeStep(
-            observation=observation.reshape((4,)).astype(np.float32),
-            reward=np.array(0., dtype=np.float32),
-            step_type=dm_env.StepType.FIRST,
-            discount=np.array(1., dtype=np.float32))
-        self._adder.add_first(next_timestep)
+        # # frankenstein first step
+        # next_timestep = dm_env.TimeStep(
+        #     observation=observation.reshape((4,)).astype(np.float32),
+        #     reward=np.array(0., dtype=np.float32),
+        #     step_type=dm_env.StepType.FIRST,
+        #     discount=np.array(1., dtype=np.float32))
+        # self._adder.add_first(next_timestep)
 
         game_history.to_play_history.append(self.game.to_play())
 
@@ -202,19 +202,19 @@ class SelfPlay:
                 game_history.to_play_history.append(self.game.to_play())
 
                 step_type = dm_env.StepType.MID if not done else dm_env.StepType.LAST
-                # frankensteining
-                next_timestep = dm_env.TimeStep(
-                    observation=observation.reshape((4,)).astype(np.float32),
-                    reward=np.array(reward, dtype=np.float32),
-                    step_type=step_type,
-                    discount=np.array(1., dtype=np.float32))
-                self._adder.add(
-                    np.array(action, dtype=np.int32),
-                    next_timestep,
-                    extras={'pi': np.array(visit_count_distribution, dtype=np.float32),
-                    'value': np.zeros_like(np.array(root.value(), dtype=np.float32))}
-                    # 'target_value': ReplayBuffer.compute_target_value(game_history, len(game_history.observation_history))}
-                )
+                # # frankensteining
+                # next_timestep = dm_env.TimeStep(
+                #     observation=observation.reshape((4,)).astype(np.float32),
+                #     reward=np.array(reward, dtype=np.float32),
+                #     step_type=step_type,
+                #     discount=np.array(1., dtype=np.float32))
+                # self._adder.add(
+                #     np.array(action, dtype=np.int32),
+                #     next_timestep,
+                #     extras={'pi': np.array(visit_count_distribution, dtype=np.float32),
+                #     'value': np.zeros_like(np.array(root.value(), dtype=np.float32))}
+                #     # 'target_value': ReplayBuffer.compute_target_value(game_history, len(game_history.observation_history))}
+                # )
 
         return game_history
 
