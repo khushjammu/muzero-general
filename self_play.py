@@ -3,6 +3,7 @@
 import reverb
 import dm_env
 from acme.adders import reverb as adders
+import jax
 
 #####
 
@@ -143,10 +144,10 @@ class SelfPlay:
 
         # frankenstein first step
         next_timestep = dm_env.TimeStep(
-            observation=observation,
-            reward=0,
+            observation=observation.astype(np.float32),
+            reward=np.array(0., dtype=np.float32),
             step_type=dm_env.StepType.FIRST,
-            discount=1.)
+            discount=np.array(1., dtype=np.float32))
         self._adder.add_first(next_timestep)
 
         game_history.to_play_history.append(self.game.to_play())
@@ -202,11 +203,16 @@ class SelfPlay:
                 step_type = dm_env.StepType.MID if not done else dm_env.StepType.LAST
                 # frankensteining
                 next_timestep = dm_env.TimeStep(
-                    observation=observation,
-                    reward=reward,
+                    observation=observation.astype(np.float32),
+                    reward=np.array(reward, dtype=np.float32),
                     step_type=step_type,
-                    discount=1.)
-                self._adder.add(action.astype(np.int64), next_timestep, extras={'pi': visit_count_distribution, 'value': root.value()})
+                    discount=np.array(1., dtype=np.float32))
+                self._adder.add(
+                    np.array(action, dtype=np.int32),
+                    next_timestep,
+                    extras={'pi': np.array(visit_count_distribution, dtype=np.float32),
+                    'value': np.array(root.value(), dtype=np.float32)}
+                )
 
                 if render:
                     print(f"Played action: {self.game.action_to_string(action)}")
