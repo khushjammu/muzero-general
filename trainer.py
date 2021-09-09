@@ -167,6 +167,8 @@ class Trainer:
 
         to_insert = ReStonks(*batch)
 
+        import ray; breakpoint()
+
         self._client.insert(to_insert, priorities={'priority_table': 1.0})
 
         # for i in range(observation_batch.shape[0]):
