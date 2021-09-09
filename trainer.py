@@ -8,16 +8,6 @@ from replay_buffer import ReplayBuffer
 
 from typing import Callable, Iterable, Mapping, NamedTuple, Optional, Union, Tuple
 
-class Step(NamedTuple):
-    """Step class used internally for reverb adders."""
-    observation: types.NestedArray
-    action: types.NestedArray
-    reward: types.NestedArray
-    discount: types.NestedArray
-    start_of_episode: StartOfEpisodeType
-    extras: types.NestedArray = ()
-
-
 #####
 
 import copy
