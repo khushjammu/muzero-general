@@ -205,7 +205,7 @@ class SelfPlay:
                     reward=reward,
                     step_type=step_type,
                     discount=1.)
-                self._adder.add(action, next_timestep, extras={'pi': visit_count_distribution, 'value': root.value()})
+                self._adder.add(action.astype(np.int64), next_timestep, extras={'pi': visit_count_distribution, 'value': root.value()})
 
                 if render:
                     print(f"Played action: {self.game.action_to_string(action)}")
