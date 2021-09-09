@@ -166,9 +166,11 @@ class Trainer:
             gradient_scale_batch,
         ) = batch
 
+        batch = jax.tree_util.tree_map(lambda x: np.stack(x), batch)
+
         to_insert = ReStonks(*batch)
 
-        to_insert = jax.tree_util.tree_map(lambda x: np.asarray(x), to_insert)
+        
 
         import ray; breakpoint()
 
