@@ -271,6 +271,7 @@ class SelfPlay:
         actions = [action for action in node.children.keys()]
         if temperature == 0:
             action = actions[numpy.argmax(visit_counts)]
+            visit_count_distribution = visit_counts
         elif temperature == float("inf"):
             action = numpy.random.choice(actions)
         else:
