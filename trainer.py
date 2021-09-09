@@ -8,6 +8,15 @@ from replay_buffer import ReplayBuffer
 
 from typing import Callable, Iterable, Mapping, NamedTuple, Optional, Union, Tuple
 
+class ReStonks(NamedTuple):
+    observation_batch: any
+    action_batch: any
+    target_value: any
+    target_reward: any
+    target_policy: any
+    weight_batch: any
+    gradient_scale_batch: any
+
 #####
 
 import copy
@@ -156,7 +165,9 @@ class Trainer:
             gradient_scale_batch,
         ) = batch
 
-        self._client.insert(batch, priorities={'priority_table': 1.0})
+        to_insert = ReStonks(*batch)
+
+        self._client.insert(to_insert, priorities={'priority_table': 1.0})
 
         # for i in range(observation_batch.shape[0]):
         #     step_to_insert = (
