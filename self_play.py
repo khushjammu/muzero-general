@@ -35,7 +35,7 @@ class SelfPlay:
 
         # frankenstein
         K = 6  # number of unroll steps + initial inference
-        N_TD_STEPS = 10  # HOW MANY STEPS TO BOOTSTRAP INTO THE FUTURE
+        N_TD_STEPS = 20  # HOW MANY STEPS TO BOOTSTRAP INTO THE FUTURE
         SEQUENCE_LENGTH = K + N_TD_STEPS
         PERIOD = 1  # PERIOD FOR SEQUENCE ADDER
 
