@@ -14,6 +14,7 @@ import ray
 import torch
 
 import models
+import numpy as np
 
 
 @ray.remote
