@@ -1,3 +1,11 @@
+# frankensteining the two systems
+
+import reverb
+import dm_env
+from acme.adders import reverb as adders
+
+#####
+
 import math
 import time
 
@@ -21,6 +29,19 @@ class SelfPlay:
         # Fix random generator seed
         numpy.random.seed(seed)
         torch.manual_seed(seed)
+
+        # frankenstein
+        K = 6  # number of unroll steps + initial inference
+        N_TD_STEPS = 10  # HOW MANY STEPS TO BOOTSTRAP INTO THE FUTURE
+        SEQUENCE_LENGTH = K + N_TD_STEPS
+        PERIOD = 1  # PERIOD FOR SEQUENCE ADDER
+
+        self._adder = adders.SequenceAdder(
+          client=reverb.Client("localhost:9000"),
+          sequence_length=SEQUENCE_LENGTH,
+          period=PERIOD, # sequences are exactly non-overlapping
+          end_of_episode_behavior=adders.EndBehavior.ABSORBING
+        )
 
         # Initialize the network
         self.model = models.MuZeroNetwork(self.config)
@@ -118,6 +139,15 @@ class SelfPlay:
         game_history.action_history.append(0)
         game_history.observation_history.append(observation)
         game_history.reward_history.append(0)
+
+        # frankenstein first step
+        next_timestep = dm_env.TimeStep(
+            observation=observation,
+            reward=0,
+            step_type=dm_env.StepType.FIRST,
+            discount=1.)
+        self._adder.add_first(next_timestep)
+
         game_history.to_play_history.append(self.game.to_play())
 
         done = False
@@ -149,7 +179,7 @@ class SelfPlay:
                         self.game.to_play(),
                         True,
                     )
-                    action = self.select_action(
+                    action, visit_count_distribution = self.select_action(
                         root,
                         temperature
                         if not temperature_threshold
@@ -168,6 +198,14 @@ class SelfPlay:
                     )
 
                 observation, reward, done = self.game.step(action)
+                step_type = dm_env.StepType.MID if not done else dm_env.StepType.LAST
+                # frankensteining
+                next_timestep = dm_env.TimeStep(
+                    observation=observation,
+                    reward=reward,
+                    step_type=step_type,
+                    discount=1.)
+                self._adder.add(action, next_timestep, extras={'pi': visit_count_distribution, 'value': root.value()})
 
                 if render:
                     print(f"Played action: {self.game.action_to_string(action)}")
@@ -243,7 +281,7 @@ class SelfPlay:
             )
             action = numpy.random.choice(actions, p=visit_count_distribution)
 
-        return action
+        return action, visit_count_distribution # frankensteining
 
 
 # Game independent
