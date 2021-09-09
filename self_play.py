@@ -203,7 +203,7 @@ class SelfPlay:
                 step_type = dm_env.StepType.MID if not done else dm_env.StepType.LAST
                 # frankensteining
                 next_timestep = dm_env.TimeStep(
-                    observation=observation.astype(np.float32),
+                    observation=observation.reshape((4,)).astype(np.float32),
                     reward=np.array(reward, dtype=np.float32),
                     step_type=step_type,
                     discount=np.array(1., dtype=np.float32))
