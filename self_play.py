@@ -144,7 +144,7 @@ class SelfPlay:
 
         # frankenstein first step
         next_timestep = dm_env.TimeStep(
-            observation=observation.astype(np.float32),
+            observation=observation.reshape((4,)).astype(np.float32),
             reward=np.array(0., dtype=np.float32),
             step_type=dm_env.StepType.FIRST,
             discount=np.array(1., dtype=np.float32))
