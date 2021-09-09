@@ -156,7 +156,7 @@ class Trainer:
             gradient_scale_batch,
         ) = batch
 
-        self._client.insert(batch)
+        self._client.insert(batch, priorities={'priority_table': 1.0})
 
         # for i in range(observation_batch.shape[0]):
         #     step_to_insert = (
