@@ -170,8 +170,6 @@ class Trainer:
 
         to_insert = ReStonks(*batch_mod)
 
-        
-
         # import ray; breakpoint()
 
         self._client.insert(to_insert, priorities={'priority_table': 1.0})
@@ -320,7 +318,7 @@ class Trainer:
             )
 
         # Scale the value loss, paper recommends by 0.25 (See paper appendix Reanalyze)
-        loss = value_loss + reward_loss + policy_loss
+        loss = value_loss * 0.25 + reward_loss + policy_loss
         if self.config.PER:
             # Correct PER bias by using importance-sampling (IS) weights
             loss *= weight_batch
@@ -348,7 +346,7 @@ class Trainer:
 
         # import sys; sys.exit(-1)
 
-        breakpoint() # breakpoint so i can inspect what's going on
+        # breakpoint() # breakpoint so i can inspect what's going on
 
         return (
             priorities,
