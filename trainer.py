@@ -7,6 +7,8 @@ import jax
 import numpy as np
 from replay_buffer import ReplayBuffer
 
+import pickle
+
 from typing import Callable, Iterable, Mapping, NamedTuple, Optional, Union, Tuple
 
 class ReStonks(NamedTuple):
@@ -57,6 +59,11 @@ class Trainer:
         self.model.set_weights(copy.deepcopy(initial_checkpoint["weights"]))
         self.model.to(torch.device("cuda" if self.config.train_on_gpu else "cpu"))
         self.model.train()
+
+        # frankensteining
+        with open("pytorch_weights", "wb") as f:
+            pickle.dump(self.model.state_dict(), f)
+            print("weights pickled!")
 
         self.training_step = initial_checkpoint["training_step"]
 
@@ -327,6 +334,7 @@ class Trainer:
 
         # Optimize
         self.optimizer.zero_grad()
+        loss.register_hook(lambda grad: print("grad:", grad))
         loss.backward()
         self.optimizer.step()
         self.training_step += 1
@@ -346,7 +354,7 @@ class Trainer:
 
         # import sys; sys.exit(-1)
 
-        # breakpoint() # breakpoint so i can inspect what's going on
+        breakpoint() # breakpoint so i can inspect what's going on
 
         return (
             priorities,
