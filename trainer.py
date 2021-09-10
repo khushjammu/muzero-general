@@ -354,7 +354,7 @@ class Trainer:
 
         # import sys; sys.exit(-1)
 
-        breakpoint() # breakpoint so i can inspect what's going on
+        import ray; breakpoint() # breakpoint so i can inspect what's going on
 
         return (
             priorities,
