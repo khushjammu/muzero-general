@@ -335,7 +335,10 @@ class Trainer:
         # Optimize
         self.optimizer.zero_grad()
         dumped_grads = None
-        loss.register_hook(lambda grad: print("grad:", grad); dumped_grads = grad)
+        def temp_hook(grad):
+            print("grad:", grad)
+            dumped_grads = grad
+        loss.register_hook(temp_hook)
         loss.backward()
         self.optimizer.step()
         self.training_step += 1
