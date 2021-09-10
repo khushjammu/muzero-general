@@ -45,10 +45,10 @@ class Trainer:
         torch.manual_seed(self.config.seed)
 
         # frankenstein
-        K = 6  # number of unroll steps + initial inference
-        N_TD_STEPS = 20  # HOW MANY STEPS TO BOOTSTRAP INTO THE FUTURE
-        SEQUENCE_LENGTH = K + N_TD_STEPS
-        PERIOD = 1  # PERIOD FOR SEQUENCE ADDER
+        # K = 6  # number of unroll steps + initial inference
+        # N_TD_STEPS = 20  # HOW MANY STEPS TO BOOTSTRAP INTO THE FUTURE
+        # SEQUENCE_LENGTH = K + N_TD_STEPS
+        # PERIOD = 1  # PERIOD FOR SEQUENCE ADDER
 
         self._client = reverb.Client("localhost:9000")
 
@@ -172,7 +172,7 @@ class Trainer:
 
         
 
-        import ray; breakpoint()
+        # import ray; breakpoint()
 
         self._client.insert(to_insert, priorities={'priority_table': 1.0})
 
@@ -348,7 +348,7 @@ class Trainer:
 
         # import sys; sys.exit(-1)
 
-        # breakpoint() # breakpoint so i can inspect what's going on
+        breakpoint() # breakpoint so i can inspect what's going on
 
         return (
             priorities,
