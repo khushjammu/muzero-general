@@ -51,7 +51,6 @@ class Trainer:
         # N_TD_STEPS = 20  # HOW MANY STEPS TO BOOTSTRAP INTO THE FUTURE
         # SEQUENCE_LENGTH = K + N_TD_STEPS
         # PERIOD = 1  # PERIOD FOR SEQUENCE ADDER
-
         self._client = reverb.Client("localhost:9000")
 
         # Initialize the network
@@ -124,6 +123,7 @@ class Trainer:
             if self.training_step % self.config.checkpoint_interval == 0:
                 shared_storage.set_info.remote(
                     {
+                        "franken_state_dict": copy.deepcopy(self.model.state_dict()), # frankensteining: save weight dict for our model to retrieve
                         "weights": copy.deepcopy(self.model.get_weights()),
                         "optimizer_state": copy.deepcopy(
                             models.dict_to_cpu(self.optimizer.state_dict())
@@ -173,30 +173,11 @@ class Trainer:
             gradient_scale_batch,
         ) = batch
 
-        batch_mod = [np.stack(x) for x in batch]
 
-        to_insert = ReStonks(*batch_mod)
-
-        # import ray; breakpoint()
-
-        self._client.insert(to_insert, priorities={'priority_table': 1.0})
-
-        # for i in range(observation_batch.shape[0]):
-        #     step_to_insert = (
-        #         observation_batch[i],
-        #         action_batch[i],
-        #         target_value[i],
-        #         target_reward[i],
-        #         target_policy[i],
-        #     )
-        #     self._client.insert(step_to_insert)
-
-        # observation: types.NestedArray
-        # action: types.NestedArray
-        # reward: types.NestedArray
-        # discount: types.NestedArray
-        # start_of_episode: StartOfEpisodeType
-        # extras: types.NestedArray = ()        
+        # frankensteining
+        # batch_mod = [np.stack(x) for x in batch]
+        # to_insert = ReStonks(*batch_mod)
+        # self._client.insert(to_insert, priorities={'priority_table': 1.0})     
 
         # Keep values as scalars for calculating the priorities for the prioritized replay
         target_value_scalar = numpy.array(target_value, dtype="float32")
@@ -334,11 +315,6 @@ class Trainer:
 
         # Optimize
         self.optimizer.zero_grad()
-        dumped_grads = None
-        def temp_hook(grad):
-            print("grad:", grad)
-            dumped_grads = grad
-        loss.register_hook(temp_hook)
         loss.backward()
         self.optimizer.step()
         self.training_step += 1
@@ -352,13 +328,11 @@ class Trainer:
             "losses": losses
         }
 
-        with open("data_to_dump", "wb") as f:
-            import pickle
-            pickle.dump(data_to_dump, f)
+        # with open("data_to_dump", "wb") as f:
+        #     import pickle
+        #     pickle.dump(data_to_dump, f)
 
         # import sys; sys.exit(-1)
-
-        import ray; breakpoint() # breakpoint so i can inspect what's going on
 
         return (
             priorities,
