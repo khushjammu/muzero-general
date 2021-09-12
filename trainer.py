@@ -175,9 +175,9 @@ class Trainer:
 
 
         # frankensteining
-        # batch_mod = [np.stack(x) for x in batch]
-        # to_insert = ReStonks(*batch_mod)
-        # self._client.insert(to_insert, priorities={'priority_table': 1.0})     
+        batch_mod = [np.stack(x) for x in batch]
+        to_insert = ReStonks(*batch_mod)
+        self._client.insert(to_insert, priorities={'priority_table': 1.0})     
 
         # Keep values as scalars for calculating the priorities for the prioritized replay
         target_value_scalar = numpy.array(target_value, dtype="float32")
