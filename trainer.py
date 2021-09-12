@@ -179,6 +179,18 @@ class Trainer:
         to_insert = ReStonks(*batch_mod)
         self._client.insert(to_insert, priorities={'priority_table': 1.0})     
 
+        batch = self._client.sample("priority_table", num_samples=1)
+        batch_data = batch[0][0].data
+        (
+            observation_batch,
+            action_batch,
+            target_value,
+            target_reward,
+            target_policy,
+            weight_batch,
+            gradient_scale_batch,
+        ) = batch_data
+
         # Keep values as scalars for calculating the priorities for the prioritized replay
         target_value_scalar = numpy.array(target_value, dtype="float32")
         priorities = numpy.zeros_like(target_value_scalar)
