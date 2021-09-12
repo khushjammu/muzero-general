@@ -51,15 +51,16 @@ class Trainer:
         # N_TD_STEPS = 20  # HOW MANY STEPS TO BOOTSTRAP INTO THE FUTURE
         # SEQUENCE_LENGTH = K + N_TD_STEPS
         # PERIOD = 1  # PERIOD FOR SEQUENCE ADDER
-        server = reverb.Server(tables=[
-            reverb.Table(
-                name='my_table',
-                sampler=reverb.selectors.Uniform(),
-                remover=reverb.selectors.Fifo(),
-                max_size=100,
-                rate_limiter=reverb.rate_limiters.MinSize(1)),
-            ],
-        )
+        # server = reverb.Server(tables=[
+        #     reverb.Table(
+        #         name='my_table',
+        #         sampler=reverb.selectors.Uniform(),
+        #         remover=reverb.selectors.Fifo(),
+        #         max_size=100,
+        #         rate_limiter=reverb.rate_limiters.MinSize(1)),
+        #     ],
+        #     port=9000,
+        # )
         self._client = reverb.Client("localhost:9000")
 
         # Initialize the network
@@ -188,17 +189,17 @@ class Trainer:
         to_insert = ReStonks(*batch_mod)
         self._client.insert(to_insert, priorities={'priority_table': 1.0})     
 
-        batch = self._client.sample("priority_table", num_samples=1)
-        batch_data = batch[0][0].data
-        (
-            observation_batch,
-            action_batch,
-            target_value,
-            target_reward,
-            target_policy,
-            weight_batch,
-            gradient_scale_batch,
-        ) = batch_data
+        # batch = self._client.sample("priority_table", num_samples=1)
+        # batch_data = batch[0][0].data
+        # (
+        #     observation_batch,
+        #     action_batch,
+        #     target_value,
+        #     target_reward,
+        #     target_policy,
+        #     weight_batch,
+        #     gradient_scale_batch,
+        # ) = batch_data
 
         # Keep values as scalars for calculating the priorities for the prioritized replay
         target_value_scalar = numpy.array(target_value, dtype="float32")

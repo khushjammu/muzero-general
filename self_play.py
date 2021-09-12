@@ -279,6 +279,8 @@ class SelfPlay:
             )
             action = numpy.random.choice(actions, p=visit_count_distribution)
 
+        print("visit_count_distribution: ", visit_count_distribution)
+
         return action, visit_count_distribution # frankensteining
 
 
@@ -401,10 +403,12 @@ class MCTS:
         """
         Select the child with the highest UCB score.
         """
-        max_ucb = max(
-            self.ucb_score(node, child, min_max_stats)
-            for action, child in node.children.items()
-        )
+        ucbs = [self.ucb_score(node, child, min_max_stats) for action, child in node.children.items()]
+
+        print("ucbs: ", ucbs)
+
+        max_ucb = max(ucbs)
+
         action = numpy.random.choice(
             [
                 action
