@@ -279,9 +279,6 @@ class SelfPlay:
             )
             action = numpy.random.choice(actions, p=visit_count_distribution)
 
-        if temperature != 0:
-            print("visit_count_distribution: ", visit_count_distribution)
-
         return action, visit_count_distribution # frankensteining
 
 
@@ -398,6 +395,9 @@ class MCTS:
             "max_tree_depth": max_tree_depth,
             "root_predicted_value": root_predicted_value,
         }
+
+        breakpoint()
+
         return root, extra_info
 
     def select_child(self, node, min_max_stats):
@@ -405,8 +405,6 @@ class MCTS:
         Select the child with the highest UCB score.
         """
         ucbs = [self.ucb_score(node, child, min_max_stats) for action, child in node.children.items()]
-
-        print("ucbs: ", ucbs)
 
         max_ucb = max(ucbs)
 
