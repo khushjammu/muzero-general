@@ -454,7 +454,7 @@ class MCTS:
         else:
             value_score = 0
 
-        if self.temperature != 0: breakpoint()
+        # if self.temperature != 0: breakpoint()
 
         return prior_score + value_score
 
