@@ -381,8 +381,8 @@ class MCTS:
                 else:
                     virtual_to_play = self.config.players[0]
 
-            if temperature !=0 and franken_current_simulation == 5: 
-                prev_node = search_path[-2]
+            if temperature != 0 and franken_current_simulation == 5: 
+                prev_node = search_path[0]
                 print(prev_node.visit_count)
                 print([child.visit_count for child in prev_node.children.values()])
                 print([child.prior for child in prev_node.children.values()])
