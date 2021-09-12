@@ -154,7 +154,7 @@ class MuZero:
         ).remote(self.checkpoint, self.config)
 
         # frankensteining: make the shared storage a named actor so that our learner can retrieve weights directly + detached
-        self.shared_storage_worker = shared_storage.SharedStorage.options(name="shared_storage", lifetime="detached").remote(
+        self.shared_storage_worker = shared_storage.SharedStorage.options(name="shared_storage").remote(
             self.checkpoint, self.config,
         )
         self.shared_storage_worker.set_info.remote("terminate", False)
