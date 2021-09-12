@@ -305,6 +305,7 @@ class MCTS:
         temperature=None,
         override_root_with=None,
     ):
+        self.temperature = temperature
         """
         At the root of the search tree we use the representation function to obtain a
         hidden state given the current observation.
@@ -354,9 +355,10 @@ class MCTS:
                 temperature=temperature
             )
 
-        print(f"value = jnp.array({root_predicted_value})")
-        print(f"embedding = jnp.array({hidden_state})")
-        print(f"prior = jnp.array({[c.prior for c in root.children.values()]})")
+        if temperature != 0:
+            print(f"value = jnp.array({root_predicted_value})")
+            print(f"embedding = jnp.array({hidden_state})")
+            print(f"prior = jnp.array({[c.prior for c in root.children.values()]})")
 
         min_max_stats = MinMaxStats()
 
@@ -451,7 +453,7 @@ class MCTS:
         else:
             value_score = 0
 
-        breakpoint()
+        if self.temperature != 0: breakpoint()
 
         return prior_score + value_score
 
