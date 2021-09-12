@@ -350,6 +350,7 @@ class MCTS:
             root.add_exploration_noise(
                 dirichlet_alpha=self.config.root_dirichlet_alpha,
                 exploration_fraction=self.config.root_exploration_fraction,
+                temperature=temperature
             )
 
         min_max_stats = MinMaxStats()
@@ -508,7 +509,7 @@ class Node:
         for action, p in policy.items():
             self.children[action] = Node(p)
 
-    def add_exploration_noise(self, dirichlet_alpha, exploration_fraction):
+    def add_exploration_noise(self, dirichlet_alpha, exploration_fraction, temperature=None):
         """
         At the start of each search, we add dirichlet noise to the prior of the root to
         encourage the search to explore new actions.
@@ -517,7 +518,7 @@ class Node:
         noise = numpy.random.dirichlet([dirichlet_alpha] * len(actions))
         frac = exploration_fraction
         for a, n in zip(actions, noise):
-            print(f"PRIOR {str(a)}:", self.children[a].prior * (1 - frac) + n * frac)
+            if temperature != 0: print(f"PRIOR {str(a)}:", self.children[a].prior * (1 - frac) + n * frac)
             self.children[a].prior = self.children[a].prior * (1 - frac) + n * frac
 
 
