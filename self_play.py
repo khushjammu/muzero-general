@@ -279,7 +279,8 @@ class SelfPlay:
             )
             action = numpy.random.choice(actions, p=visit_count_distribution)
 
-        print("visit_count_distribution: ", visit_count_distribution)
+        if temperature != 0:
+            print("visit_count_distribution: ", visit_count_distribution)
 
         return action, visit_count_distribution # frankensteining
 
