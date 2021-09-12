@@ -168,6 +168,7 @@ class SelfPlay:
                         self.game.legal_actions(),
                         self.game.to_play(),
                         True,
+                        temperature=temperature,
                     )
                     action, visit_count_distribution = self.select_action(
                         root,
@@ -301,6 +302,7 @@ class MCTS:
         legal_actions,
         to_play,
         add_exploration_noise,
+        temperature=None,
         override_root_with=None,
     ):
         """
@@ -370,6 +372,8 @@ class MCTS:
                 else:
                     virtual_to_play = self.config.players[0]
 
+            if temperature !=0: breakpoint()
+
             # Inside the search tree we use the dynamics function to obtain the next hidden
             # state given an action and the previous hidden state
             parent = search_path[-2]
@@ -396,7 +400,7 @@ class MCTS:
             "root_predicted_value": root_predicted_value,
         }
 
-        breakpoint()
+        if temperature !=0: breakpoint()
 
         return root, extra_info
 
