@@ -332,6 +332,7 @@ class MCTS:
                 root_predicted_value, self.config.support_size
             ).item()
             reward = models.support_to_scalar(reward, self.config.support_size).item()
+            
             assert (
                 legal_actions
             ), f"Legal actions should not be an empty array. Got {legal_actions}."
@@ -352,6 +353,10 @@ class MCTS:
                 exploration_fraction=self.config.root_exploration_fraction,
                 temperature=temperature
             )
+
+        print(f"value = jnp.array({root_predicted_value})")
+        print(f"embedding = jnp.array({hidden_state})")
+        print(f"prior = jnp.array({[c.prior for c in root.children.values()]})")
 
         min_max_stats = MinMaxStats()
 
@@ -445,6 +450,8 @@ class MCTS:
             )
         else:
             value_score = 0
+
+        breakpoint()
 
         return prior_score + value_score
 
