@@ -364,7 +364,7 @@ class MCTS:
         min_max_stats = MinMaxStats()
 
         max_tree_depth = 0
-        for _ in range(self.config.num_simulations):
+        for franken_current_simulation in range(self.config.num_simulations):
             virtual_to_play = to_play
             node = root
             search_path = [node]
@@ -381,7 +381,7 @@ class MCTS:
                 else:
                     virtual_to_play = self.config.players[0]
 
-            if temperature !=0: breakpoint()
+            if temperature !=0 and franken_current_simulation == 5: breakpoint()
 
             # Inside the search tree we use the dynamics function to obtain the next hidden
             # state given an action and the previous hidden state
