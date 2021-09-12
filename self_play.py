@@ -381,7 +381,18 @@ class MCTS:
                 else:
                     virtual_to_play = self.config.players[0]
 
-            if temperature !=0 and franken_current_simulation == 5: breakpoint()
+            if temperature !=0 and franken_current_simulation == 5: 
+                prev_node = search_path[-2]
+                print(prev_node.visit_count)
+                print([child.visit_count for child in prev_node.children.values()])
+                print([child.prior for child in prev_node.children.values()])
+                normalised_temp_value = []
+                for child in prev_node.children.values(): normalised_temp_value.append(min_max_stats.normalize(child.reward + self.config.discount * child.value()) if child.visit_count > 0 else 0)
+                print(normalised_temp_value)
+                print("UCB:", [self.ucb_score(prev_node, child, min_max_stats) for action, child in prev_node.children.items()])
+
+
+                breakpoint()
 
             # Inside the search tree we use the dynamics function to obtain the next hidden
             # state given an action and the previous hidden state
