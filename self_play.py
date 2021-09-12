@@ -513,7 +513,7 @@ class Node:
         noise = numpy.random.dirichlet([dirichlet_alpha] * len(actions))
         frac = exploration_fraction
         for a, n in zip(actions, noise):
-            print("PRIOR:", self.children[a].prior * (1 - frac) + n * frac)
+            print(f"PRIOR {str(a)}:", self.children[a].prior * (1 - frac) + n * frac)
             self.children[a].prior = self.children[a].prior * (1 - frac) + n * frac
 
 
