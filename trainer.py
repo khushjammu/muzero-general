@@ -51,6 +51,15 @@ class Trainer:
         # N_TD_STEPS = 20  # HOW MANY STEPS TO BOOTSTRAP INTO THE FUTURE
         # SEQUENCE_LENGTH = K + N_TD_STEPS
         # PERIOD = 1  # PERIOD FOR SEQUENCE ADDER
+        server = reverb.Server(tables=[
+            reverb.Table(
+                name='my_table',
+                sampler=reverb.selectors.Uniform(),
+                remover=reverb.selectors.Fifo(),
+                max_size=100,
+                rate_limiter=reverb.rate_limiters.MinSize(1)),
+            ],
+        )
         self._client = reverb.Client("localhost:9000")
 
         # Initialize the network
