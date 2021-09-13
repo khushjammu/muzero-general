@@ -350,6 +350,8 @@ class Trainer:
             "losses": losses
         }
 
+        breakpoint()
+
         # with open("data_to_dump", "wb") as f:
         #     import pickle
         #     pickle.dump(data_to_dump, f)
