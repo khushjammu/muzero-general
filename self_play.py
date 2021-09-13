@@ -305,8 +305,8 @@ class MCTS:
         temperature=None,
         override_root_with=None,
     ):
-        if temperature != 0: np.random.seed(0)
-        self.temperature = temperature
+        # if temperature != 0: np.random.seed(0)
+        # self.temperature = temperature
         """
         At the root of the search tree we use the representation function to obtain a
         hidden state given the current observation.
