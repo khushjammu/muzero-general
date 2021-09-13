@@ -356,10 +356,10 @@ class MCTS:
                 temperature=temperature
             )
 
-        if temperature != 0:
-            print(f"value = jnp.array({root_predicted_value})")
-            print(f"embedding = jnp.array({hidden_state})")
-            print(f"prior = jnp.array({[c.prior for c in root.children.values()]})")
+        # if temperature != 0:
+        #     print(f"value = jnp.array({root_predicted_value})")
+        #     print(f"embedding = jnp.array({hidden_state})")
+        #     print(f"prior = jnp.array({[c.prior for c in root.children.values()]})")
 
         min_max_stats = MinMaxStats()
 
@@ -539,7 +539,7 @@ class Node:
         noise = numpy.random.dirichlet([dirichlet_alpha] * len(actions))
         frac = exploration_fraction
         for a, n in zip(actions, noise):
-            if temperature != 0: print(f"PRIOR {str(a)}:", self.children[a].prior * (1 - frac) + n * frac)
+            # if temperature != 0: print(f"PRIOR {str(a)}:", self.children[a].prior * (1 - frac) + n * frac)
             self.children[a].prior = self.children[a].prior * (1 - frac) + n * frac
 
 
