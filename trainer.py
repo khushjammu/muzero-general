@@ -184,10 +184,10 @@ class Trainer:
         ) = batch
 
 
-        # frankensteining
-        batch_mod = [np.stack(x) for x in batch]
-        to_insert = ReStonks(*batch_mod)
-        self._client.insert(to_insert, priorities={'priority_table': 1.0})     
+        # # frankensteining
+        # batch_mod = [np.stack(x) for x in batch]
+        # to_insert = ReStonks(*batch_mod)
+        # self._client.insert(to_insert, priorities={'priority_table': 1.0})     
 
         # batch = self._client.sample("priority_table", num_samples=1)
         # batch_data = batch[0][0].data
