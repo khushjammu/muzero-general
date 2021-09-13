@@ -329,9 +329,9 @@ class Trainer:
 
         # Scale the value loss, paper recommends by 0.25 (See paper appendix Reanalyze)
         loss = value_loss * 0.25 + reward_loss + policy_loss
-        if self.config.PER:
-            # Correct PER bias by using importance-sampling (IS) weights
-            loss *= weight_batch
+        # if self.config.PER:
+        #     # Correct PER bias by using importance-sampling (IS) weights
+        #     loss *= weight_batch
         # Mean over batch dimension (pseudocode do a sum)
         loss = loss.mean()
 
