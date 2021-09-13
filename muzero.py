@@ -160,7 +160,7 @@ class MuZero:
         )
         self.shared_storage_worker.set_info.remote("terminate", False)
 
-        self.replay_buffer_worker = replay_buffer.ReplayBuffer.remote(
+        self.replay_buffer_worker = replay_buffer.ReplayBuffer.options(name="replay_buffer", lifetime="detached").remote(
             self.checkpoint, self.replay_buffer, self.config
         )
 
