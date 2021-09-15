@@ -158,7 +158,13 @@ class MuZero:
         self.shared_storage_worker = shared_storage.SharedStorage.options(name="shared_storage", lifetime="detached").remote(
             self.checkpoint, self.config,
         )
-        self.shared_storage_worker.set_info.remote("terminate", False)
+
+        # frankensteining: store a None in custom_batch so our learner knows to wait
+        # self.shared_storage_worker.set_info.remote("terminate", False)
+        self.shared_storage_worker.set_info.remote({
+                "terminate": False,
+                "custom_batch": None
+            })
 
         self.replay_buffer_worker = replay_buffer.ReplayBuffer.options(name="replay_buffer", lifetime="detached").remote(
             self.checkpoint, self.replay_buffer, self.config

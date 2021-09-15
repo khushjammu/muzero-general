@@ -116,6 +116,13 @@ class Trainer:
         ):
             index_batch, batch = ray.get(next_batch)
             next_batch = replay_buffer.get_batch.remote()
+
+            # frankensteining: store specific batch inside the shared storage so that our model can sample the same batch
+            shared_storage.set_info.remote(
+                {
+                    "custom_batch": batch
+                }
+
             self.update_lr()
             (
                 priorities,
@@ -334,6 +341,9 @@ class Trainer:
         #     loss *= weight_batch
         # Mean over batch dimension (pseudocode do a sum)
         loss = loss.mean()
+
+        # frankensteining: breakpoint so we can inspect the loss + gradients + parameters etc
+        breakpoint()
 
         # Optimize
         self.optimizer.zero_grad()
