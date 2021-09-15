@@ -28,6 +28,10 @@ class Trainer:
         self.model.to(torch.device("cuda" if self.config.train_on_gpu else "cpu"))
         self.model.train()
 
+        with open("pytorch_weights", "wb") as f:
+            pickle.dump(self.model.state_dict(), f)
+            print("weights pickled!")
+
         self.training_step = initial_checkpoint["training_step"]
 
         if "cuda" not in str(next(self.model.parameters()).device):

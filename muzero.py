@@ -88,7 +88,7 @@ class MuZero:
         if 1 < self.num_gpus:
             self.num_gpus = math.floor(self.num_gpus)
 
-        ray.init(num_gpus=total_gpus, ignore_reinit_error=True)
+        ray.init(num_gpus=total_gpus, ignore_reinit_error=True, namespace="franken")
 
         # Checkpoint and replay buffer used to initialize workers
         self.checkpoint = {
@@ -152,12 +152,12 @@ class MuZero:
             num_cpus=0, num_gpus=num_gpus_per_worker if self.config.train_on_gpu else 0,
         ).remote(self.checkpoint, self.config)
 
-        self.shared_storage_worker = shared_storage.SharedStorage.remote(
+        self.shared_storage_worker = shared_storage.SharedStorage.options(name="shared_storage", lifetime="detached").remote(
             self.checkpoint, self.config,
         )
         self.shared_storage_worker.set_info.remote("terminate", False)
 
-        self.replay_buffer_worker = replay_buffer.ReplayBuffer.remote(
+        self.replay_buffer_worker = replay_buffer.ReplayBuffer.options(name="replay_buffer", lifetime="detached").remote(
             self.checkpoint, self.replay_buffer, self.config
         )
 
