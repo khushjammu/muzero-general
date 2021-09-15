@@ -177,7 +177,7 @@ class Trainer:
                 hidden_state, action_batch[:, i]
             )
             # Scale the gradient at the start of the dynamics function (See paper appendix Training)
-            hidden_state.register_hook(lambda grad: grad * 0.5)
+            # hidden_state.register_hook(lambda grad: grad * 0.5)
             predictions.append((value, reward, policy_logits))
         # predictions: num_unroll_steps+1, 3, batch, 2*support_size+1 | 2*support_size+1 | 9 (according to the 2nd dim)
 
@@ -224,15 +224,15 @@ class Trainer:
             )
 
             # Scale gradient by the number of unroll steps (See paper appendix Training)
-            current_value_loss.register_hook(
-                lambda grad: grad / gradient_scale_batch[:, i]
-            )
-            current_reward_loss.register_hook(
-                lambda grad: grad / gradient_scale_batch[:, i]
-            )
-            current_policy_loss.register_hook(
-                lambda grad: grad / gradient_scale_batch[:, i]
-            )
+            # current_value_loss.register_hook(
+            #     lambda grad: grad / gradient_scale_batch[:, i]
+            # )
+            # current_reward_loss.register_hook(
+            #     lambda grad: grad / gradient_scale_batch[:, i]
+            # )
+            # current_policy_loss.register_hook(
+            #     lambda grad: grad / gradient_scale_batch[:, i]
+            # )
 
             value_loss += current_value_loss
             reward_loss += current_reward_loss
