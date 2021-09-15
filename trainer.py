@@ -118,10 +118,7 @@ class Trainer:
             next_batch = replay_buffer.get_batch.remote()
 
             # frankensteining: store specific batch inside the shared storage so that our model can sample the same batch
-            shared_storage.set_info.remote(
-                {
-                    "custom_batch": batch
-                }
+            shared_storage.set_info.remote("custom_batch", batch)
 
             self.update_lr()
             (
@@ -344,7 +341,7 @@ class Trainer:
 
         # frankensteining: breakpoint so we can inspect the loss + gradients + parameters etc
         breakpoint()
-
+ 
         # Optimize
         self.optimizer.zero_grad()
         loss.backward()
