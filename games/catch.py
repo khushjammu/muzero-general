@@ -149,7 +149,6 @@ class Game(AbstractGame):
             The new observation, the reward and a boolean if the game has ended.
         """
         observation, reward, done, _ = self.env.step(action)
-        import ray; breakpoint()
         return numpy.array(observation), reward, done
 
     def legal_actions(self):
@@ -172,7 +171,6 @@ class Game(AbstractGame):
         Returns:
             Initial observation of the game.
         """
-        import ray; breakpoint()
         return numpy.array(self.env.reset())
 
     def close(self):
