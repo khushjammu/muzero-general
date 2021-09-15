@@ -7,6 +7,8 @@ import torch
 
 import models
 
+import pickle
+
 
 @ray.remote
 class Trainer:
