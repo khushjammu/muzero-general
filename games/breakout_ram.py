@@ -21,7 +21,7 @@ class MuZeroConfig:
         self.observation_shape = (1, 1, 128)  # Dimensions of the game observation, must be 3D (channel, height, width). For a 1D array, please reshape it to (1, 1, length of array)
         self.action_space = list(range(18))  # Fixed list of all possible actions. You should only edit the length
         self.players = list(range(1))  # List of players. You should only edit the length
-        self.stacked_observations = 0  # Number of previous observations and previous actions to add to the current observation
+        self.stacked_observations = 20  # Number of previous observations and previous actions to add to the current observation
 
         # Evaluate
         self.muzero_player = 0  # Turn Muzero begins to play (0: MuZero plays first, 1: MuZero plays second)
@@ -30,7 +30,7 @@ class MuZeroConfig:
 
 
         ### Self-Play
-        self.num_workers = 1  # Number of simultaneous threads/workers self-playing to feed the replay buffer
+        self.num_workers = 5  # Number of simultaneous threads/workers self-playing to feed the replay buffer
         self.selfplay_on_gpu = False
         self.max_moves = 2500  # Maximum number of moves if game is not finished before
         self.num_simulations = 20  # Number of future moves self-simulated
@@ -64,7 +64,7 @@ class MuZeroConfig:
 
         # Fully Connected Network
         self.encoding_size = 64
-        self.fc_representation_layers = []  # Define the hidden layers in the representation network
+        self.fc_representation_layers = [128]  # Define the hidden layers in the representation network
         self.fc_dynamics_layers = [128]  # Define the hidden layers in the dynamics network
         self.fc_reward_layers = [128]  # Define the hidden layers in the reward network
         self.fc_value_layers = [128]  # Define the hidden layers in the value network
@@ -78,11 +78,11 @@ class MuZeroConfig:
         self.training_steps = 100_000  # Total number of training steps (ie weights update according to a batch)
         self.batch_size = 256  # Number of parts of games to train on at each training step
         self.checkpoint_interval = 10  # Number of training steps before using the model for self-playing
-        self.value_loss_weight = 1  # Scale the value loss to avoid overfitting of the value function, paper recommends 0.25 (See paper appendix Reanalyze)
+        self.value_loss_weight = 0.25  # Scale the value loss to avoid overfitting of the value function, paper recommends 0.25 (See paper appendix Reanalyze)
         self.train_on_gpu = torch.cuda.is_available()  # Train on GPU if available
 
         self.optimizer = "Adam"  # "Adam" or "SGD". Paper uses SGD
-        self.weight_decay = 1e-4  # L2 weights regularization
+        self.weight_decay = 5e-2  # L2 weights regularization
         self.momentum = 0.9  # Used only if optimizer is SGD
 
         # Exponential learning rate schedule
@@ -95,7 +95,7 @@ class MuZeroConfig:
         ### Replay Buffer
         self.replay_buffer_size = 500  # Number of self-play games to keep in the replay buffer
         self.num_unroll_steps = 5  # Number of game moves to keep for every batch element
-        self.td_steps = 20  # Number of steps in the future to take into account for calculating the target value
+        self.td_steps = 10  # Number of steps in the future to take into account for calculating the target value
         print("PER ENABLED YOU FOOL")
         self.PER = True  # Prioritized Replay (See paper appendix Training), select in priority the elements in the replay buffer which are unexpected for the network
         self.PER_alpha = 0.5  # How much prioritization is used, 0 corresponding to the uniform case, paper suggests 1

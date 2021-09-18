@@ -1,33 +1,10 @@
-# frankensteining the two systems
-
-import reverb
-import dm_env
-from acme.adders import reverb as adders
-import jax
-import numpy as np
-from replay_buffer import ReplayBuffer
-
-import pickle
-
-from typing import Callable, Iterable, Mapping, NamedTuple, Optional, Union, Tuple
-
-class ReStonks(NamedTuple):
-    observation_batch: any
-    action_batch: any
-    target_value: any
-    target_reward: any
-    target_policy: any
-    weight_batch: any
-    gradient_scale_batch: any
-
-#####
-
 import copy
 import time
 
 import numpy
 import ray
 import torch
+import pickle
 
 import models
 
@@ -46,33 +23,11 @@ class Trainer:
         numpy.random.seed(self.config.seed)
         torch.manual_seed(self.config.seed)
 
-        # frankenstein
-        # K = 6  # number of unroll steps + initial inference
-        # N_TD_STEPS = 20  # HOW MANY STEPS TO BOOTSTRAP INTO THE FUTURE
-        # SEQUENCE_LENGTH = K + N_TD_STEPS
-        # PERIOD = 1  # PERIOD FOR SEQUENCE ADDER
-        # server = reverb.Server(tables=[
-        #     reverb.Table(
-        #         name='my_table',
-        #         sampler=reverb.selectors.Uniform(),
-        #         remover=reverb.selectors.Fifo(),
-        #         max_size=100,
-        #         rate_limiter=reverb.rate_limiters.MinSize(1)),
-        #     ],
-        #     port=9000,
-        # )
-        self._client = reverb.Client("localhost:9000")
-
         # Initialize the network
         self.model = models.MuZeroNetwork(self.config)
         self.model.set_weights(copy.deepcopy(initial_checkpoint["weights"]))
         self.model.to(torch.device("cuda" if self.config.train_on_gpu else "cpu"))
         self.model.train()
-
-        # frankensteining
-        with open("pytorch_weights", "wb") as f:
-            pickle.dump(self.model.state_dict(), f)
-            print("weights pickled!")
 
         self.training_step = initial_checkpoint["training_step"]
 
@@ -104,6 +59,10 @@ class Trainer:
                 copy.deepcopy(initial_checkpoint["optimizer_state"])
             )
 
+        with open("pytorch_weights", "wb") as f:
+            pickle.dump(self.model.state_dict(), f)
+            print("weights pickled!")
+
     def continuous_update_weights(self, replay_buffer, shared_storage):
         # Wait for the replay buffer to be filled
         while ray.get(shared_storage.get_info.remote("num_played_games")) < 1:
@@ -116,10 +75,6 @@ class Trainer:
         ):
             index_batch, batch = ray.get(next_batch)
             next_batch = replay_buffer.get_batch.remote()
-
-            # frankensteining: store specific batch inside the shared storage so that our model can sample the same batch
-            shared_storage.set_info.remote("custom_batch", (index_batch, batch))
-
             self.update_lr()
             (
                 priorities,
@@ -137,7 +92,6 @@ class Trainer:
             if self.training_step % self.config.checkpoint_interval == 0:
                 shared_storage.set_info.remote(
                     {
-                        "franken_state_dict": copy.deepcopy(self.model.state_dict()), # frankensteining: save weight dict for our model to retrieve
                         "weights": copy.deepcopy(self.model.get_weights()),
                         "optimizer_state": copy.deepcopy(
                             models.dict_to_cpu(self.optimizer.state_dict())
@@ -187,24 +141,6 @@ class Trainer:
             gradient_scale_batch,
         ) = batch
 
-
-        # # frankensteining
-        # batch_mod = [np.stack(x) for x in batch]
-        # to_insert = ReStonks(*batch_mod)
-        # self._client.insert(to_insert, priorities={'priority_table': 1.0})     
-
-        # batch = self._client.sample("priority_table", num_samples=1)
-        # batch_data = batch[0][0].data
-        # (
-        #     observation_batch,
-        #     action_batch,
-        #     target_value,
-        #     target_reward,
-        #     target_policy,
-        #     weight_batch,
-        #     gradient_scale_batch,
-        # ) = batch_data
-
         # Keep values as scalars for calculating the priorities for the prioritized replay
         target_value_scalar = numpy.array(target_value, dtype="float32")
         priorities = numpy.zeros_like(target_value_scalar)
@@ -242,15 +178,9 @@ class Trainer:
                 hidden_state, action_batch[:, i]
             )
             # Scale the gradient at the start of the dynamics function (See paper appendix Training)
-            # hidden_state.register_hook(lambda grad: grad * 0.5)
+            # hidden_state.register_hook(lambda grad: grad * 0.5) # DISABLED DYNAMICS GRADIENT SCALING
             predictions.append((value, reward, policy_logits))
         # predictions: num_unroll_steps+1, 3, batch, 2*support_size+1 | 2*support_size+1 | 9 (according to the 2nd dim)
-
-        losses = {
-            "value_loss": [],
-            "reward_loss": [],
-            "policy_loss": []
-        }
 
         ## Compute losses
         value_loss, reward_loss, policy_loss = (0, 0, 0)
@@ -266,11 +196,6 @@ class Trainer:
         )
         value_loss += current_value_loss
         policy_loss += current_policy_loss
-
-        losses["value_loss"].append(current_value_loss)
-        losses["policy_loss"].append(current_policy_loss)
-        losses["reward_loss"].append(None)
-
         # Compute priorities for the prioritized replay (See paper appendix Training)
         pred_value_scalar = (
             models.support_to_scalar(value, self.config.support_size)
@@ -300,6 +225,7 @@ class Trainer:
             )
 
             # Scale gradient by the number of unroll steps (See paper appendix Training)
+            # DISABLED UNROLL STEP GRADIENT SCALING
             # current_value_loss.register_hook(
             #     lambda grad: grad / gradient_scale_batch[:, i]
             # )
@@ -309,10 +235,6 @@ class Trainer:
             # current_policy_loss.register_hook(
             #     lambda grad: grad / gradient_scale_batch[:, i]
             # )
-
-            losses["value_loss"].append(current_value_loss)
-            losses["policy_loss"].append(current_policy_loss)
-            losses["reward_loss"].append(current_reward_loss)
 
             value_loss += current_value_loss
             reward_loss += current_reward_loss
@@ -332,36 +254,18 @@ class Trainer:
             )
 
         # Scale the value loss, paper recommends by 0.25 (See paper appendix Reanalyze)
-        loss = value_loss * 0.25 + reward_loss + policy_loss
-        # if self.config.PER:
-        #     # Correct PER bias by using importance-sampling (IS) weights
-        #     loss *= weight_batch
+        loss = value_loss * self.config.value_loss_weight + reward_loss + policy_loss
+        if self.config.PER:
+            # Correct PER bias by using importance-sampling (IS) weights
+            loss *= weight_batch
         # Mean over batch dimension (pseudocode do a sum)
         loss = loss.mean()
 
-        # frankensteining: breakpoint so we can inspect the loss + gradients + parameters etc
-        breakpoint()
- 
         # Optimize
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
         self.training_step += 1
-
-
-        data_to_dump = {
-            "predictions": predictions,
-            "target_value": target_value,
-            "target_reward": target_reward,
-            "target_policy": target_policy,
-            "losses": losses
-        }
-
-        # with open("data_to_dump", "wb") as f:
-        #     import pickle
-        #     pickle.dump(data_to_dump, f)
-
-        # import sys; sys.exit(-1)
 
         return (
             priorities,

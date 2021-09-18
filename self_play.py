@@ -1,13 +1,3 @@
-# frankensteining the two systems
-
-import reverb
-import dm_env
-from acme.adders import reverb as adders
-import jax
-from replay_buffer import ReplayBuffer
-
-#####
-
 import math
 import time
 
@@ -16,7 +6,6 @@ import ray
 import torch
 
 import models
-import numpy as np
 
 
 @ray.remote
@@ -129,15 +118,6 @@ class SelfPlay:
         game_history.action_history.append(0)
         game_history.observation_history.append(observation)
         game_history.reward_history.append(0)
-
-        # # frankenstein first step
-        # next_timestep = dm_env.TimeStep(
-        #     observation=observation.reshape((4,)).astype(np.float32),
-        #     reward=np.array(0., dtype=np.float32),
-        #     step_type=dm_env.StepType.FIRST,
-        #     discount=np.array(1., dtype=np.float32))
-        # self._adder.add_first(next_timestep)
-
         game_history.to_play_history.append(self.game.to_play())
 
         done = False
@@ -168,9 +148,8 @@ class SelfPlay:
                         self.game.legal_actions(),
                         self.game.to_play(),
                         True,
-                        temperature=temperature,
                     )
-                    action, visit_count_distribution = self.select_action(
+                    action = self.select_action(
                         root,
                         temperature
                         if not temperature_threshold
@@ -201,21 +180,6 @@ class SelfPlay:
                 game_history.observation_history.append(observation)
                 game_history.reward_history.append(reward)
                 game_history.to_play_history.append(self.game.to_play())
-
-                step_type = dm_env.StepType.MID if not done else dm_env.StepType.LAST
-                # # frankensteining
-                # next_timestep = dm_env.TimeStep(
-                #     observation=observation.reshape((4,)).astype(np.float32),
-                #     reward=np.array(reward, dtype=np.float32),
-                #     step_type=step_type,
-                #     discount=np.array(1., dtype=np.float32))
-                # self._adder.add(
-                #     np.array(action, dtype=np.int32),
-                #     next_timestep,
-                #     extras={'pi': np.array(visit_count_distribution, dtype=np.float32),
-                #     'value': np.zeros_like(np.array(root.value(), dtype=np.float32))}
-                #     # 'target_value': ReplayBuffer.compute_target_value(game_history, len(game_history.observation_history))}
-                # )
 
         return game_history
 
@@ -269,7 +233,6 @@ class SelfPlay:
         actions = [action for action in node.children.keys()]
         if temperature == 0:
             action = actions[numpy.argmax(visit_counts)]
-            visit_count_distribution = visit_counts
         elif temperature == float("inf"):
             action = numpy.random.choice(actions)
         else:
@@ -280,7 +243,7 @@ class SelfPlay:
             )
             action = numpy.random.choice(actions, p=visit_count_distribution)
 
-        return action, visit_count_distribution # frankensteining
+        return action
 
 
 # Game independent
@@ -302,11 +265,8 @@ class MCTS:
         legal_actions,
         to_play,
         add_exploration_noise,
-        temperature=None,
         override_root_with=None,
     ):
-        # if temperature != 0: np.random.seed(0)
-        # self.temperature = temperature
         """
         At the root of the search tree we use the representation function to obtain a
         hidden state given the current observation.
@@ -334,7 +294,6 @@ class MCTS:
                 root_predicted_value, self.config.support_size
             ).item()
             reward = models.support_to_scalar(reward, self.config.support_size).item()
-            
             assert (
                 legal_actions
             ), f"Legal actions should not be an empty array. Got {legal_actions}."
@@ -353,18 +312,12 @@ class MCTS:
             root.add_exploration_noise(
                 dirichlet_alpha=self.config.root_dirichlet_alpha,
                 exploration_fraction=self.config.root_exploration_fraction,
-                temperature=temperature
             )
-
-        # if temperature != 0:
-        #     print(f"value = jnp.array({root_predicted_value})")
-        #     print(f"embedding = jnp.array({hidden_state})")
-        #     print(f"prior = jnp.array({[c.prior for c in root.children.values()]})")
 
         min_max_stats = MinMaxStats()
 
         max_tree_depth = 0
-        for franken_current_simulation in range(self.config.num_simulations):
+        for _ in range(self.config.num_simulations):
             virtual_to_play = to_play
             node = root
             search_path = [node]
@@ -380,19 +333,6 @@ class MCTS:
                     virtual_to_play = self.config.players[virtual_to_play + 1]
                 else:
                     virtual_to_play = self.config.players[0]
-
-            # if temperature != 0 and franken_current_simulation == 5: 
-            #     prev_node = search_path[0]
-            #     print(prev_node.visit_count)
-            #     print([child.visit_count for child in prev_node.children.values()])
-            #     print([child.prior for child in prev_node.children.values()])
-            #     normalised_temp_value = []
-            #     for child in prev_node.children.values(): normalised_temp_value.append(min_max_stats.normalize(child.reward + self.config.discount * child.value()) if child.visit_count > 0 else 0)
-            #     print(normalised_temp_value)
-            #     print("UCB:", [self.ucb_score(prev_node, child, min_max_stats) for action, child in prev_node.children.items()])
-
-
-            #     breakpoint()
 
             # Inside the search tree we use the dynamics function to obtain the next hidden
             # state given an action and the previous hidden state
@@ -419,19 +359,16 @@ class MCTS:
             "max_tree_depth": max_tree_depth,
             "root_predicted_value": root_predicted_value,
         }
-
-        # if temperature !=0: breakpoint()
-
         return root, extra_info
 
     def select_child(self, node, min_max_stats):
         """
         Select the child with the highest UCB score.
         """
-        ucbs = [self.ucb_score(node, child, min_max_stats) for action, child in node.children.items()]
-
-        max_ucb = max(ucbs)
-
+        max_ucb = max(
+            self.ucb_score(node, child, min_max_stats)
+            for action, child in node.children.items()
+        )
         action = numpy.random.choice(
             [
                 action
@@ -464,8 +401,6 @@ class MCTS:
             )
         else:
             value_score = 0
-
-        # if self.temperature != 0: breakpoint()
 
         return prior_score + value_score
 
@@ -530,7 +465,7 @@ class Node:
         for action, p in policy.items():
             self.children[action] = Node(p)
 
-    def add_exploration_noise(self, dirichlet_alpha, exploration_fraction, temperature=None):
+    def add_exploration_noise(self, dirichlet_alpha, exploration_fraction):
         """
         At the start of each search, we add dirichlet noise to the prior of the root to
         encourage the search to explore new actions.
@@ -539,7 +474,6 @@ class Node:
         noise = numpy.random.dirichlet([dirichlet_alpha] * len(actions))
         frac = exploration_fraction
         for a, n in zip(actions, noise):
-            # if temperature != 0: print(f"PRIOR {str(a)}:", self.children[a].prior * (1 - frac) + n * frac)
             self.children[a].prior = self.children[a].prior * (1 - frac) + n * frac
 
 
